@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 
 const props = defineProps<{
     applicant: any;
+    questions: Array<{ id: number, text: string }>;
 }>();
 
 const formatDate = (dateString: string) => { // Helper for formatting date
@@ -14,6 +15,11 @@ const formatDate = (dateString: string) => { // Helper for formatting date
     return new Date(dateString).toLocaleDateString('id-ID', {
         day: 'numeric', month: 'long', year: 'numeric'
     });
+};
+
+const getChecklistAnswer = (questionId: number) => {
+    if (!props.applicant.checklist) return null;
+    return props.applicant.checklist[questionId];
 };
 
 const Section = ({ title, children }: any) => { return null; }; // Dummy for layout understanding
@@ -35,12 +41,13 @@ const Section = ({ title, children }: any) => { return null; }; // Dummy for lay
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6 [&_label]:text-xs [&_label]:text-gray-500 [&_label]:block [&_label]:mb-1 [&_p]:font-medium [&_p]:text-gray-900">
                 
                 <!-- Data Pribadi -->
                 <Card>
                     <CardHeader><CardTitle>Data Pribadi</CardTitle></CardHeader>
                     <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2"><Label>Posisi yang Dilamar</Label><p class="text-lg font-bold text-blue-600">{{ applicant.position?.name || '-' }}</p></div>
                         <div><Label>NIK</Label><p>{{ applicant.nik }}</p></div>
                         <div><Label>Nama Lengkap</Label><p>{{ applicant.full_name }}</p></div>
                         <div><Label>Nama Panggilan</Label><p>{{ applicant.nickname || '-' }}</p></div>
@@ -122,16 +129,36 @@ const Section = ({ title, children }: any) => { return null; }; // Dummy for lay
                      </CardContent>
                 </Card>
 
+                <!-- Checklist / Daftar Pertanyaan -->
+                <Card>
+                     <CardHeader><CardTitle>Daftar Pertanyaan</CardTitle></CardHeader>
+                     <CardContent>
+                        <div v-if="!applicant.checklist || Object.keys(applicant.checklist).length === 0" class="text-gray-500">Tidak ada data checklist.</div>
+                        <div v-else class="space-y-4">
+                            <div v-for="question in questions" :key="question.id" class="border p-4 rounded bg-gray-50 dark:bg-gray-800">
+                                <p class="mb-2 font-medium text-sm text-gray-900">{{ question.text }}</p>
+                                <div v-if="getChecklistAnswer(question.id)">
+                                     <div class="flex items-center space-x-2 text-sm">
+                                        <span class="font-bold" :class="getChecklistAnswer(question.id).answer === 'Ya' ? 'text-green-600' : 'text-red-600'">
+                                            {{ getChecklistAnswer(question.id).answer }}
+                                        </span>
+                                        <span v-if="getChecklistAnswer(question.id).note" class="text-gray-500">- {{ getChecklistAnswer(question.id).note }}</span>
+                                     </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-400 italic">Belum dijawab</div>
+                            </div>
+                        </div>
+                     </CardContent>
+                </Card>
+
+                <div class="flex justify-end mt-6">
+                    <Link href="/admin/applicants">
+                        <Button variant="outline">Kembali ke Daftar</Button>
+                    </Link>
+                </div>
             </div>
         </div>
     </AppLayout>
 </template>
 
-<style scoped>
-p {
-    @apply font-medium text-gray-900;
-}
-label {
-    @apply text-xs text-gray-500 block mb-1;
-}
-</style>
+

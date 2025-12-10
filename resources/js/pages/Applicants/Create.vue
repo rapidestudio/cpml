@@ -4,12 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
+
+const props = defineProps<{
+    questions: Array<{ id: number, text: string }>;
+    positions: Array<{ id: number, name: string }>;
+}>();
 
 const form = useForm({
     // Personal Data
+    position_id: '',
+    website: '', // Honeypot
     nik: '',
     full_name: '',
     nickname: '',
@@ -24,6 +31,7 @@ const form = useForm({
     residence_ownership_status: '',
     phone_number: '',
     email: '',
+    same_as_ktp_domicile: false,
 
     // Parents
     father_name: '',
@@ -45,7 +53,25 @@ const form = useForm({
     work_experiences: [] as any[],
     children: [] as any[],
     emergency_contacts: [] as any[],
+    checklist: (props.questions || []).reduce((acc, q) => {
+        acc[q.id] = { answer: '', note: '' };
+        return acc;
+    }, {} as Record<number, { answer: string, note: string }>),
 });
+
+const age = ref('');
+
+const calculateAge = (dobString: string) => {
+    if (!dobString) return '';
+    const today = new Date();
+    const birthDate = new Date(dobString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age.toString();
+};
 
 // Watchers for "Same as KTP"
 watch(() => form.same_as_ktp_parents, (val) => {
@@ -56,8 +82,25 @@ watch(() => form.same_as_ktp_spouse, (val) => {
     if (val) form.spouse_address = form.id_card_address;
 });
 
+watch(() => form.same_as_ktp_domicile, (val) => {
+    if (val) form.domicile_address = form.id_card_address;
+});
+
+// Sync watchers when KTP address changes
+watch(() => form.id_card_address, (val) => {
+    if (form.same_as_ktp_parents) {
+        form.parents_address = val;
+    }
+    if (form.same_as_ktp_spouse) {
+        form.spouse_address = val;
+    }
+    if (form.same_as_ktp_domicile) {
+        form.domicile_address = val;
+    }
+});
+
 watch(() => form.date_of_birth, (val) => {
-    // Calculate age logic if needed for display
+    age.value = calculateAge(val);
 });
 
 // Helper functions for dynamic fields
@@ -126,6 +169,8 @@ const submit = () => {
                 </div>
 
                 <form @submit.prevent="submit" class="space-y-6">
+                    <!-- Honeypot -->
+                    <input type="text" name="website" v-model="form.website" style="display:none" tabindex="-1" autocomplete="off" />
                     
                     <!-- 1. Data Pelamar -->
                     <Card>
@@ -133,6 +178,15 @@ const submit = () => {
                             <CardTitle>Data Pribadi</CardTitle>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2 md:col-span-2">
+                                <Label for="position_id">Posisi yang Dilamar</Label>
+                                <select id="position_id" v-model="form.position_id" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white">
+                                    <option value="" disabled>Pilih Posisi...</option>
+                                    <option v-for="pos in positions" :key="pos.id" :value="pos.id">{{ pos.name }}</option>
+                                </select>
+                                <p v-if="form.errors.position_id" class="text-red-500 text-xs">{{ form.errors.position_id }}</p>
+                            </div>
+
                             <div class="space-y-2">
                                 <Label for="nik">No. KTP (NIK)</Label>
                                 <Input id="nik" v-model="form.nik" :class="{'border-red-500': form.errors.nik}" placeholder="Contoh: 3201..." />
@@ -168,8 +222,13 @@ const submit = () => {
 
                             <div class="space-y-2">
                                 <Label for="date_of_birth">Tanggal Lahir</Label>
-                                <Input id="date_of_birth" type="date" v-model="form.date_of_birth" />
+                                <Input id="date_of_birth" type="date" v-model="form.date_of_birth" class="block w-full" />
                                 <p v-if="form.errors.date_of_birth" class="text-red-500 text-xs">{{ form.errors.date_of_birth }}</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label>Usia</Label>
+                                <Input :value="age" readonly class="bg-gray-100 dark:bg-gray-800 cursor-not-allowed" placeholder="Otomatis" />
                             </div>
 
                             <div class="space-y-2">
@@ -223,13 +282,14 @@ const submit = () => {
                             </div>
 
                             <div class="space-y-2 md:col-span-2">
-                                <div class="flex justify-between items-center mb-1">
+                                <div class="flex items-center space-x-2 mb-2">
                                     <Label for="domicile_address">Alamat Domisili</Label>
                                     <div class="flex items-center space-x-2">
-                                         <button type="button" @click="form.domicile_address = form.id_card_address" class="text-xs text-blue-600 hover:underline">Sama dengan KTP</button>
+                                        <input type="checkbox" id="same_as_ktp_domicile" v-model="form.same_as_ktp_domicile" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                                        <label for="same_as_ktp_domicile" class="text-sm text-gray-600 dark:text-gray-400">Sama dengan KTP</label>
                                     </div>
                                 </div>
-                                <textarea id="domicile_address" v-model="form.domicile_address" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
+                                <textarea id="domicile_address" v-model="form.domicile_address" :disabled="form.same_as_ktp_domicile" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
                                 <p v-if="form.errors.domicile_address" class="text-red-500 text-xs">{{ form.errors.domicile_address }}</p>
                             </div>
 
@@ -276,11 +336,11 @@ const submit = () => {
                                 <div class="flex items-center space-x-2 mb-2">
                                     <Label for="parents_address">Alamat Orang Tua</Label>
                                     <div class="flex items-center space-x-2">
-                                        <Checkbox id="same_as_ktp_parents" :checked="form.same_as_ktp_parents" @update:checked="(v: boolean) => form.same_as_ktp_parents = v" />
+                                        <input type="checkbox" id="same_as_ktp_parents" v-model="form.same_as_ktp_parents" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                                         <label for="same_as_ktp_parents" class="text-sm text-gray-600 dark:text-gray-400">Sama dengan KTP</label>
                                     </div>
                                 </div>
-                                <textarea id="parents_address" v-model="form.parents_address" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
+                                <textarea id="parents_address" v-model="form.parents_address" :disabled="form.same_as_ktp_parents" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
                             </div>
 
                             <div class="md:col-span-2 border-t pt-4 mt-2">
@@ -307,11 +367,11 @@ const submit = () => {
                                  <div class="flex items-center space-x-2 mb-2">
                                     <Label for="spouse_address">Alamat Suami/Istri</Label>
                                     <div class="flex items-center space-x-2">
-                                        <Checkbox id="same_as_ktp_spouse" :checked="form.same_as_ktp_spouse" @update:checked="(v: boolean) => form.same_as_ktp_spouse = v" />
+                                        <input type="checkbox" id="same_as_ktp_spouse" v-model="form.same_as_ktp_spouse" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                                         <label for="same_as_ktp_spouse" class="text-sm text-gray-600 dark:text-gray-400">Sama dengan KTP</label>
                                     </div>
                                 </div>
-                                <textarea id="spouse_address" v-model="form.spouse_address" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
+                                <textarea id="spouse_address" v-model="form.spouse_address" :disabled="form.same_as_ktp_spouse" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:border-gray-700"></textarea>
                             </div>
                         </CardContent>
                     </Card>
@@ -431,6 +491,36 @@ const submit = () => {
                                       </div>
                                  </div>
                              </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- 6. Checklist (Placeholder) -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Daftar Pertanyaan</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="space-y-4">
+                                <div v-for="question in questions" :key="question.id" class="p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
+                                    <p class="mb-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{ question.text }}</p>
+                                    <div class="namespace-y-2">
+                                        <div class="flex items-center space-x-4 mb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <input type="radio" :id="`${question.id}_yes`" value="Ya" v-model="form.checklist[question.id].answer" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                                                <label :for="`${question.id}_yes`" class="text-sm font-medium text-gray-700 dark:text-gray-300">Ya</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <input type="radio" :id="`${question.id}_no`" value="Tidak" v-model="form.checklist[question.id].answer" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                                                <label :for="`${question.id}_no`" class="text-sm font-medium text-gray-700 dark:text-gray-300">Tidak</label>
+                                            </div>
+                                        </div>
+                                        <div v-if="form.checklist[question.id].answer === 'Ya'">
+                                            <Input v-model="form.checklist[question.id].note" placeholder="Berikan keterangan..." class="mt-2" :class="{'border-red-500': form.errors[`checklist.${question.id}.note`]}" />
+                                            <p v-if="form.errors[`checklist.${question.id}.note`]" class="text-red-500 text-xs mt-1">{{ form.errors[`checklist.${question.id}.note`] }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 

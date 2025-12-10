@@ -5,16 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Applicant extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $guarded = ['id'];
 
     protected $casts = [
         'date_of_birth' => 'date',
+        'checklist' => 'array',
     ];
 
     protected static function booted()
@@ -37,5 +40,10 @@ class Applicant extends Model
     public function emergencyContacts(): HasMany
     {
         return $this->hasMany(ApplicantEmergencyContact::class);
+    }
+
+    public function position(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Position::class);
     }
 }

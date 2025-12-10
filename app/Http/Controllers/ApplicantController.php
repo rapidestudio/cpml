@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Question;
 use App\Models\Applicant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-
+    
 class ApplicantController extends Controller
 {
     /**
@@ -14,7 +15,13 @@ class ApplicantController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Applicants/Create');
+        $questions = Question::where('is_active', true)->get();
+        $positions = \App\Models\Position::where('is_active', true)->get();
+        
+        return Inertia::render('Applicants/Create', [
+            'questions' => $questions,
+            'positions' => $positions
+        ]);
     }
 
     /**
@@ -22,7 +29,13 @@ class ApplicantController extends Controller
      */
     public function store(Request $request)
     {
+        // Honeypot check
+        if ($request->filled('website')) {
+            return redirect()->back()->with('success', 'Data pelamar berhasil disimpan.'); // Fake success
+        }
+
         $validated = $request->validate([
+            'position_id' => ['required', 'exists:positions,id'],
             // Personal Data
             'nik' => ['required', 'string', 'unique:applicants,nik'],
             'full_name' => ['required', 'string'],
@@ -68,10 +81,21 @@ class ApplicantController extends Controller
             'emergency_contacts.*.name' => ['required', 'string'],
             'emergency_contacts.*.relationship' => ['required', 'string'],
             'emergency_contacts.*.phone_number' => ['required', 'string'],
+            // Checklist
+            'checklist' => ['nullable', 'array'],
         ]);
+
+        if ($request->has('checklist') && is_array($request->checklist)) {
+             foreach ($request->checklist as $key => $val) {
+                  $rules["checklist.{$key}.note"] = "required_if:checklist.{$key}.answer,Ya";
+                  $messages["checklist.{$key}.note.required_if"] = "Keterangan wajib diisi untuk pertanyaan ini jika jawaban 'Ya'.";
+             }
+             $request->validate($rules ?? [], $messages ?? []);
+        }
 
         DB::transaction(function () use ($validated, $request) {
             $applicant = Applicant::create([
+                'position_id' => $validated['position_id'],
                 'nik' => $validated['nik'],
                 'full_name' => $validated['full_name'],
                 'nickname' => $validated['nickname'] ?? null,
@@ -96,6 +120,7 @@ class ApplicantController extends Controller
                 'spouse_age' => $validated['spouse_age'] ?? null,
                 'spouse_occupation' => $validated['spouse_occupation'] ?? null,
                 'spouse_phone' => $validated['spouse_phone'] ?? null,
+                'checklist' => $validated['checklist'] ?? null,
             ]);
 
             if (!empty($request->work_experiences)) {
