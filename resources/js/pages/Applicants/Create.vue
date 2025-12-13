@@ -11,11 +11,12 @@ import { ref, watch } from 'vue';
 const props = defineProps<{
     questions: Array<{ id: number, text: string }>;
     positions: Array<{ id: number, name: string }>;
+    position_id?: string | number;
 }>();
 
 const form = useForm({
     // Personal Data
-    position_id: '',
+    position_id: props.position_id || '',
     website: '', // Honeypot
     nik: '',
     full_name: '',
@@ -23,6 +24,8 @@ const form = useForm({
     gender: '',
     place_of_birth: '',
     date_of_birth: '',
+    height: '',
+    weight: '',
     religion: '',
     marital_status: '',
     last_education: '',
@@ -224,6 +227,18 @@ const submit = () => {
                                 <Label for="date_of_birth">Tanggal Lahir</Label>
                                 <Input id="date_of_birth" type="date" v-model="form.date_of_birth" class="block w-full" />
                                 <p v-if="form.errors.date_of_birth" class="text-red-500 text-xs">{{ form.errors.date_of_birth }}</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="height">Tinggi Badan (cm)</Label>
+                                <Input id="height" type="number" v-model="form.height" placeholder="Contoh: 170" />
+                                <p v-if="form.errors.height" class="text-red-500 text-xs">{{ form.errors.height }}</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="weight">Berat Badan (kg)</Label>
+                                <Input id="weight" type="number" v-model="form.weight" placeholder="Contoh: 65" />
+                                <p v-if="form.errors.weight" class="text-red-500 text-xs">{{ form.errors.weight }}</p>
                             </div>
 
                             <div class="space-y-2">

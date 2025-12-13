@@ -20,7 +20,8 @@ class ApplicantController extends Controller
         
         return Inertia::render('Applicants/Create', [
             'questions' => $questions,
-            'positions' => $positions
+            'positions' => $positions,
+            'position_id' => request('position_id'), // Pass query param
         ]);
     }
 
@@ -43,6 +44,8 @@ class ApplicantController extends Controller
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'place_of_birth' => ['required', 'string'],
             'date_of_birth' => ['required', 'date'],
+            'height' => ['required', 'integer', 'min:100', 'max:250'],
+            'weight' => ['required', 'integer', 'min:30', 'max:150'],
             'religion' => ['required', 'string'],
             'marital_status' => ['required', 'in:Belum Menikah,Menikah,Cerai'],
             'last_education' => ['required', 'string'],
@@ -102,6 +105,8 @@ class ApplicantController extends Controller
                 'gender' => $validated['gender'],
                 'place_of_birth' => $validated['place_of_birth'],
                 'date_of_birth' => $validated['date_of_birth'],
+                'height' => $validated['height'],
+                'weight' => $validated['weight'],
                 'religion' => $validated['religion'],
                 'marital_status' => $validated['marital_status'],
                 'last_education' => $validated['last_education'],

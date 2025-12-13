@@ -53,6 +53,7 @@ const Section = ({ title, children }: any) => { return null; }; // Dummy for lay
                         <div><Label>Nama Panggilan</Label><p>{{ applicant.nickname || '-' }}</p></div>
                         <div><Label>Jenis Kelamin</Label><p>{{ applicant.gender }}</p></div>
                         <div><Label>Tempat, Tanggal Lahir</Label><p>{{ applicant.place_of_birth }}, {{ formatDate(applicant.date_of_birth) }}</p></div>
+                        <div><Label>Tinggi / Berat Badan</Label><p>{{ applicant.height ? applicant.height + ' cm' : '-' }} / {{ applicant.weight ? applicant.weight + ' kg' : '-' }}</p></div>
                         <div><Label>Agama</Label><p>{{ applicant.religion }}</p></div>
                         <div><Label>Status Pernikahan</Label><p>{{ applicant.marital_status }}</p></div>
                          <div><Label>Pendidikan Terakhir</Label><p>{{ applicant.last_education }}</p></div>

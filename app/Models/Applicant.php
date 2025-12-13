@@ -18,6 +18,8 @@ class Applicant extends Model
     protected $casts = [
         'date_of_birth' => 'date',
         'checklist' => 'array',
+        'height' => 'integer',
+        'weight' => 'integer',
     ];
 
     protected static function booted()

@@ -10,9 +10,7 @@ use App\Http\Controllers\ApplicantController;
 use App\Http\Controllers\Admin\ApplicantController as AdminApplicantController;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
+    return redirect()->route('applicants.create');
 })->name('home');
 
 Route::get('dashboard', function () {
