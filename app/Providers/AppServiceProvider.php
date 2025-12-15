@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Limit;
+use Illuminate\Cache\RateLimiting\Limit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\RateLimiter::for('submission', function (\Illuminate\Http\Request $request) {
-            return \Illuminate\Support\Facades\Limit::perMinute(3)->by($request->ip());
+            return Limit::perMinute(3)->by($request->ip());
         });
     }
 }
