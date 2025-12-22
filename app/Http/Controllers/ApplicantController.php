@@ -58,19 +58,19 @@ class ApplicantController extends Controller
             // Family Data - Parents
             'father_name' => ['required', 'string'],
             'mother_name' => ['required', 'string'],
-            'father_occupation' => ['nullable', 'string'],
-            'mother_occupation' => ['nullable', 'string'],
-            'parents_address' => ['nullable', 'string'],
+            'father_occupation' => ['required', 'string'],
+            'mother_occupation' => ['required', 'string'],
+            'parents_address' => ['required', 'string'],
 
             // Family Data - Spouse
-            'spouse_name' => ['nullable', 'string'],
-            'spouse_address' => ['nullable', 'string'],
-            'spouse_age' => ['nullable', 'integer'],
-            'spouse_occupation' => ['nullable', 'string'],
-            'spouse_phone' => ['nullable', 'string'],
+            'spouse_name' => ['required_if:marital_status,Menikah', 'nullable', 'string'],
+            'spouse_address' => ['required_if:marital_status,Menikah', 'nullable', 'string'],
+            'spouse_age' => ['required_if:marital_status,Menikah', 'nullable', 'integer'],
+            'spouse_occupation' => ['required_if:marital_status,Menikah', 'nullable', 'string'],
+            'spouse_phone' => ['required_if:marital_status,Menikah', 'nullable', 'string'],
 
             // Arrays
-            'work_experiences' => ['nullable', 'array'],
+            'work_experiences' => ['required', 'array', 'min:1'],
             'work_experiences.*.company_name' => ['required', 'string'],
             'work_experiences.*.position' => ['required', 'string'],
             'work_experiences.*.start_year' => ['required', 'string'],
@@ -80,12 +80,12 @@ class ApplicantController extends Controller
             'children.*.age' => ['required', 'integer'],
             'children.*.gender' => ['required', 'in:Laki-laki,Perempuan'],
 
-            'emergency_contacts' => ['nullable', 'array'],
+            'emergency_contacts' => ['required', 'array', 'min:1'],
             'emergency_contacts.*.name' => ['required', 'string'],
             'emergency_contacts.*.relationship' => ['required', 'string'],
             'emergency_contacts.*.phone_number' => ['required', 'string'],
             // Checklist
-            'checklist' => ['nullable', 'array'],
+            'checklist' => ['required', 'array'],
         ]);
 
         if ($request->has('checklist') && is_array($request->checklist)) {

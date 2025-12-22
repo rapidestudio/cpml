@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Switch } from '@/components/ui/switch';
-import { Pencil, Trash2, Plus } from 'lucide-vue-next';
+import { Pencil, Trash2, Plus, Copy } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 const props = defineProps<{
@@ -93,6 +93,15 @@ const executeDelete = () => {
         });
     }
 };
+
+const copyPositionUrl = (id: number) => {
+    const url = `https://ptcpml.com/apply?position_id=${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('URL berhasil disalin!');
+    }).catch(err => {
+        console.error('Gagal menyalin URL: ', err);
+    });
+};
 </script>
 
 <template>
@@ -138,6 +147,9 @@ const executeDelete = () => {
                                     </TableCell>
                                     <TableCell class="text-right">
                                         <div class="flex justify-end space-x-2">
+                                            <Button variant="outline" size="icon" @click="copyPositionUrl(position.id)" title="Salin URL">
+                                                <Copy class="w-4 h-4" />
+                                            </Button>
                                             <Button variant="outline" size="icon" @click="openEditDialog(position)">
                                                 <Pencil class="w-4 h-4" />
                                             </Button>

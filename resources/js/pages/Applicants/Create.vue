@@ -178,7 +178,7 @@ const submit = () => {
                     <!-- 1. Data Pelamar -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Data Pribadi</CardTitle>
+                            <CardTitle>Data Pribadi <span class="text-red-500">*</span></CardTitle>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2 md:col-span-2">
@@ -326,7 +326,7 @@ const submit = () => {
                     <!-- 2. Data Keluarga -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Data Keluarga</CardTitle>
+                            <CardTitle>Data Keluarga <span class="text-red-500">*</span></CardTitle>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2">
@@ -394,7 +394,7 @@ const submit = () => {
                     <!-- 3. Pengalaman Kerja -->
                     <Card>
                          <CardHeader class="flex flex-row items-center justify-between">
-                            <CardTitle>Pengalaman Kerja</CardTitle>
+                            <CardTitle>Pengalaman Kerja <span class="text-red-500">*</span></CardTitle>
                             <Button type="button" variant="outline" size="sm" @click="addWorkExperience">
                                 + Tambah
                             </Button>
@@ -478,7 +478,7 @@ const submit = () => {
                     <!-- 5. Kontak Darurat -->
                     <Card>
                          <CardHeader class="flex flex-row items-center justify-between">
-                            <CardTitle>Kontak Darurat</CardTitle>
+                            <CardTitle>Kontak Darurat <span class="text-red-500">*</span></CardTitle>
                             <Button type="button" variant="outline" size="sm" @click="addEmergencyContact">
                                 + Tambah
                             </Button>
@@ -512,7 +512,7 @@ const submit = () => {
                     <!-- 6. Checklist (Placeholder) -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Daftar Pertanyaan</CardTitle>
+                            <CardTitle>Daftar Pertanyaan <span class="text-red-500">*</span></CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
