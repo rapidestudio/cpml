@@ -16,9 +16,9 @@ class ApplicantController extends Controller
     {
         $query = Applicant::query()
             ->with('position')
-            ->select('id', 'position_id', 'full_name', 'email', 'phone_number', 'created_at');
+            ->select('id', 'position_id', 'full_name', 'email', 'phone_number', 'status', 'created_at');
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
@@ -26,12 +26,33 @@ class ApplicantController extends Controller
                   ->orWhere('phone_number', 'like', "%{$search}%");
             });
         }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-        $applicants = $query->latest()->paginate(10)->withQueryString();
+        if ($request->filled('position_id')) {
+            $query->where('position_id', $request->position_id);
+        }
+        
+        if ($request->filled('date_range')) {
+             if ($request->date_range === 'today') {
+                  $query->whereDate('created_at', now());
+             } elseif ($request->date_range === 'week') {
+                  $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+             } elseif ($request->date_range === 'month') {
+                  $query->whereMonth('created_at', now()->month);
+             }
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $applicants = $query->latest()->paginate($perPage)->withQueryString();
+        $positions = \App\Models\Position::where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Admin/Applicants/Index', [
             'applicants' => $applicants,
-            'filters' => $request->only(['search']),
+            'positions' => $positions,
+            'filters' => $request->only(['search', 'status', 'position_id', 'date_range', 'per_page']),
         ]);
     }
     
@@ -94,6 +115,21 @@ class ApplicantController extends Controller
     }
 
     /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Applicant $applicant)
+    {
+        $validated = $request->validate([
+            'status' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $applicant->update($validated);
+
+        return redirect()->back()->with('success', 'Data pelamar berhasil diperbarui.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Applicant $applicant)
@@ -101,5 +137,29 @@ class ApplicantController extends Controller
         $applicant->delete();
 
         return redirect()->back()->with('success', 'Data pelamar berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request) 
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['exists:applicants,id'],
+        ]);
+
+        Applicant::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()->with('success', 'Data pelamar yang dipilih berhasil dihapus.');
+    }
+
+    public function bulkUpdateStatus(Request $request) {
+        $request->validate([
+             'ids' => ['required', 'array'],
+             'ids.*' => ['exists:applicants,id'],
+             'status' => ['required', 'string'],
+        ]);
+
+        Applicant::whereIn('id', $request->ids)->update(['status' => $request->status]);
+
+        return redirect()->back()->with('success', 'Status pelamar yang dipilih berhasil diperbarui.');
     }
 }

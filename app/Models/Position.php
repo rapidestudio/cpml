@@ -15,4 +15,9 @@ class Position extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function applicants(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Applicant::class);
+    }
 }

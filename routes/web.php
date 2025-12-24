@@ -13,9 +13,9 @@ Route::get('/', function () {
     return redirect()->route('applicants.create');
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Public Applicant Routes
 Route::get('/apply', [ApplicantController::class, 'create'])->name('applicants.create');
@@ -24,8 +24,10 @@ Route::post('/apply', [ApplicantController::class, 'store'])->middleware('thrott
 // Admin Routes
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('applicants/export', [AdminApplicantController::class, 'export'])->name('applicants.export');
+    Route::patch('applicants/bulk-status', [AdminApplicantController::class, 'bulkUpdateStatus'])->name('applicants.bulk-status');
+    Route::delete('applicants/bulk-destroy', [AdminApplicantController::class, 'bulkDestroy'])->name('applicants.bulk-destroy');
     Route::delete('applicants/{applicant}', [AdminApplicantController::class, 'destroy'])->name('applicants.destroy');
-    Route::resource('applicants', AdminApplicantController::class)->only(['index', 'show']);
+    Route::resource('applicants', AdminApplicantController::class)->only(['index', 'show', 'update']);
     Route::resource('positions', \App\Http\Controllers\Admin\PositionController::class);
 });
 

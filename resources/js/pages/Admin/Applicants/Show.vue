@@ -5,12 +5,49 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
+import { useForm } from '@inertiajs/vue3';
+import { Printer, MessageCircle, Save } from 'lucide-vue-next';
+
 const props = defineProps<{
     applicant: any;
     questions: Array<{ id: number, text: string }>;
 }>();
 
-const formatDate = (dateString: string) => { // Helper for formatting date
+const form = useForm({
+    status: props.applicant.status || 'new',
+    notes: props.applicant.notes || '',
+});
+// ... (rest of script)
+
+const updateStatus = () => {
+    form.put(`/admin/applicants/${props.applicant.id}`, {
+        preserveScroll: true,
+        only: ['applicant', 'flash'],
+    });
+};
+
+const print = () => {
+    window.print();
+};
+
+const getWhatsAppLink = (phone: string, name: string) => {
+    let number = phone.replace(/\D/g, '');
+    if (number.startsWith('0')) {
+        number = '62' + number.slice(1);
+    }
+    const text = `Halo ${name}, kami telah mereview lamaran Anda...`;
+    return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+};
+
+const statusOptions = [
+    { value: 'new', label: 'Baru' },
+    { value: 'screening', label: 'Seleksi Berkas' },
+    { value: 'interview', label: 'Wawancara' },
+    { value: 'accepted', label: 'Diterima' },
+    { value: 'rejected', label: 'Ditolak' },
+];
+
+const formatDate = (dateString: string) => {
      if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('id-ID', {
         day: 'numeric', month: 'long', year: 'numeric'
@@ -21,8 +58,6 @@ const getChecklistAnswer = (questionId: number) => {
     if (!props.applicant.checklist) return null;
     return props.applicant.checklist[questionId];
 };
-
-const Section = ({ title, children }: any) => { return null; }; // Dummy for layout understanding
 </script>
 
 <template>
@@ -40,8 +75,54 @@ const Section = ({ title, children }: any) => { return null; }; // Dummy for lay
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6 [&_label]:text-xs [&_label]:text-gray-500 [&_label]:block [&_label]:mb-1 [&_p]:font-medium [&_p]:text-gray-900">
+        <div class="py-12 print:py-0">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6 print:space-y-4 print:w-full">
+                
+                <!-- Admin Tools (Hidden on Print) -->
+                <Card class="print:hidden border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+                    <CardHeader>
+                        <CardTitle class="text-blue-800 dark:text-blue-300">Admin Tools</CardTitle>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <Label>Status Lamaran</Label>
+                                <div class="flex gap-2">
+                                    <select v-model="form.status" class="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-950 dark:text-white">
+                                        <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+                                            {{ opt.label }}
+                                        </option>
+                                    </select>
+                                    <Button @click="updateStatus" :disabled="form.processing">
+                                        <Save class="w-4 h-4 mr-2" /> Simpan
+                                    </Button>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <Label>Aksi Cepat</Label>
+                                <div class="flex gap-2">
+                                    <Button variant="outline" @click="print">
+                                        <Printer class="w-4 h-4 mr-2" /> Cetak PDF
+                                    </Button>
+                                    <a :href="getWhatsAppLink(applicant.phone_number, applicant.full_name)" target="_blank">
+                                        <Button variant="outline" class="text-green-600 border-green-200 hover:bg-green-50">
+                                            <MessageCircle class="w-4 h-4 mr-2" /> WhatsApp
+                                        </Button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <Label>Catatan Internal (Hanya dilihat Admin)</Label>
+                            <div class="flex gap-2">
+                                <textarea v-model="form.notes" placeholder="Tulis catatan interview, negosiasi gaji, dll..." class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-950 dark:text-white dark:border-gray-800"></textarea>
+                                <Button @click="updateStatus" :disabled="form.processing" size="icon" title="Simpan Catatan">
+                                    <Save class="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
                 
                 <!-- Data Pribadi -->
                 <Card>

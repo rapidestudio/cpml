@@ -12,6 +12,12 @@ class Applicant extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    
+    const STATUS_NEW = 'new';
+    const STATUS_SCREENING = 'screening';
+    const STATUS_INTERVIEW = 'interview';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_REJECTED = 'rejected';
 
     protected $guarded = ['id'];
 
