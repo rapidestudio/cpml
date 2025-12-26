@@ -95,7 +95,7 @@ const executeDelete = () => {
 };
 
 const copyPositionUrl = (id: number) => {
-    const url = `https://ptcpml.com/apply?position_id=${id}`;
+    const url = `https://recruitment.ptcpml.com/apply?position_id=${id}`;
     navigator.clipboard.writeText(url).then(() => {
         alert('URL berhasil disalin!');
     }).catch(err => {
