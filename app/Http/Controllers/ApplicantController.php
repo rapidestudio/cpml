@@ -86,6 +86,11 @@ class ApplicantController extends Controller
             'emergency_contacts.*.phone_number' => ['required', 'string'],
             // Checklist
             'checklist' => ['required', 'array'],
+
+            // Files
+            'ktp' => ['required', 'file', 'mimes:pdf', 'max:2048'], // 2MB Max
+            'cv' => ['required', 'file', 'mimes:pdf', 'max:2048'],
+            'photo' => ['required', 'file', 'mimes:jpg,jpeg', 'max:2048'],
         ]);
 
         if ($request->has('checklist') && is_array($request->checklist)) {
@@ -97,6 +102,10 @@ class ApplicantController extends Controller
         }
 
         DB::transaction(function () use ($validated, $request) {
+            $ktpPath = $request->file('ktp')->store('applicants/ktp', 'public');
+            $cvPath = $request->file('cv')->store('applicants/cv', 'public');
+            $photoPath = $request->file('photo')->store('applicants/photo', 'public');
+
             $applicant = Applicant::create([
                 'position_id' => $validated['position_id'],
                 'nik' => $validated['nik'],
@@ -126,6 +135,9 @@ class ApplicantController extends Controller
                 'spouse_occupation' => $validated['spouse_occupation'] ?? null,
                 'spouse_phone' => $validated['spouse_phone'] ?? null,
                 'checklist' => $validated['checklist'] ?? null,
+                'ktp_path' => $ktpPath,
+                'cv_path' => $cvPath,
+                'photo_path' => $photoPath,
             ]);
 
             if (!empty($request->work_experiences)) {

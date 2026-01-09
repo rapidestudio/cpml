@@ -58,9 +58,9 @@ class ApplicantController extends Controller
     
     public function export(Request $request) 
     {
-         $query = Applicant::query();
+        $query = Applicant::query()->with(['position', 'emergencyContacts']);
 
-         if ($request->has('search')) {
+        if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
@@ -81,17 +81,46 @@ class ApplicantController extends Controller
 
         $callback = function() use($applicants) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID', 'Nama Lengkap', 'Email', 'No HP', 'Gender', 'Tanggal Lahir', 'Tanggal Daftar']);
+            
+            // Header
+            fputcsv($file, [
+                'ID', 'Posisi', 'Status', 'NIK', 'Nama Lengkap', 'Nama Panggilan', 'Gender',
+                'Tempat Lahir', 'Tanggal Lahir', 'Tinggi (cm)', 'Berat (kg)', 'Agama',
+                'Status Pernikahan', 'Pendidikan Terakhir', 'Alamat KTP', 'Alamat Domisili',
+                'Status Rumah', 'No HP', 'Email', 'Catatan Internal', 'Tanggal Daftar',
+                'Nama Kontak Darurat', 'Hubungan Kontak Darurat', 'No HP Kontak Darurat'
+            ]);
 
             foreach ($applicants as $applicant) {
+                $ecNames = $applicant->emergencyContacts->pluck('name')->implode('; ');
+                $ecRelations = $applicant->emergencyContacts->pluck('relationship')->implode('; ');
+                $ecPhones = $applicant->emergencyContacts->pluck('phone_number')->implode('; ');
+
                 fputcsv($file, [
                     $applicant->id, 
-                    $applicant->full_name, 
-                    $applicant->email, 
-                    $applicant->phone_number,
+                    $applicant->position ? $applicant->position->name : '-',
+                    $applicant->status,
+                    "'". $applicant->nik, // Prevent scientific notation in Excel
+                    $applicant->full_name,
+                    $applicant->nickname,
                     $applicant->gender,
-                    $applicant->date_of_birth,
-                    $applicant->created_at
+                    $applicant->place_of_birth,
+                    $applicant->date_of_birth->format('Y-m-d'),
+                    $applicant->height,
+                    $applicant->weight,
+                    $applicant->religion,
+                    $applicant->marital_status,
+                    $applicant->last_education,
+                    $applicant->id_card_address,
+                    $applicant->domicile_address,
+                    $applicant->residence_ownership_status,
+                    "'". $applicant->phone_number,
+                    $applicant->email,
+                    $applicant->notes,
+                    $applicant->created_at->format('Y-m-d H:i'),
+                    $ecNames,
+                    $ecRelations,
+                    "'". $ecPhones // Prevent scientific notation
                 ]);
             }
             fclose($file);

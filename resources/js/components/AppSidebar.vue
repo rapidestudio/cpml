@@ -10,11 +10,14 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarGroup,
+    SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, Briefcase } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, Briefcase, Link as LinkIcon, Check } from 'lucide-vue-next';
+import { ref } from 'vue';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -47,6 +50,12 @@ const footerNavItems: NavItem[] = [
     //     icon: BookOpen,
     // },
 ];
+const copied = ref(false);
+const copyMainUrl = () => {
+    navigator.clipboard.writeText(window.location.origin);
+    copied.value = true;
+    setTimeout(() => copied.value = false, 2000);
+};
 </script>
 
 <template>
@@ -65,6 +74,18 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            
+            <SidebarGroup class="group-data-[collapsible=icon]:hidden">
+                <SidebarGroupLabel>Aksi Cepat</SidebarGroupLabel>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton @click="copyMainUrl" :tooltip="'Salin URL Utama'">
+                            <component :is="copied ? Check : LinkIcon" :class="copied ? 'text-green-500' : ''" />
+                            <span :class="copied ? 'text-green-500' : ''">{{ copied ? 'Berhasil Disalin!' : 'Salin URL Utama' }}</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>

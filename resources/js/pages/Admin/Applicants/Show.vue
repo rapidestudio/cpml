@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
 import { useForm } from '@inertiajs/vue3';
-import { Printer, MessageCircle, Save } from 'lucide-vue-next';
+import { Printer, MessageCircle, Save, FileText } from 'lucide-vue-next';
 
 const props = defineProps<{
     applicant: any;
@@ -76,8 +76,9 @@ const getChecklistAnswer = (questionId: number) => {
         </template>
 
         <div class="py-12 print:py-0">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6 print:space-y-4 print:w-full">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6 print:space-y-0 print:grid print:grid-cols-12 print:gap-4 print:w-full print:max-w-none print:px-0 print:text-xs print:leading-tight">
                 
+                <!-- Print Header (Removed) -->
                 <!-- Admin Tools (Hidden on Print) -->
                 <Card class="print:hidden border-blue-200 bg-blue-50 dark:bg-blue-900/20">
                     <CardHeader>
@@ -125,9 +126,9 @@ const getChecklistAnswer = (questionId: number) => {
                 </Card>
                 
                 <!-- Data Pribadi -->
-                <Card>
-                    <CardHeader><CardTitle>Data Pribadi</CardTitle></CardHeader>
-                    <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card class="print:shadow-none print:border-none print:p-0 print:col-span-9">
+                    <CardHeader class="print:py-1 print:px-0"><CardTitle class="print:text-sm">Data Pribadi</CardTitle></CardHeader>
+                    <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-4 print:gap-2 print:p-0">
                         <div class="md:col-span-2"><Label>Posisi yang Dilamar</Label><p class="text-lg font-bold text-blue-600">{{ applicant.position?.name || '-' }}</p></div>
                         <div><Label>NIK</Label><p>{{ applicant.nik }}</p></div>
                         <div><Label>Nama Lengkap</Label><p>{{ applicant.full_name }}</p></div>
@@ -146,10 +147,41 @@ const getChecklistAnswer = (questionId: number) => {
                     </CardContent>
                 </Card>
 
+                <!-- Dokumen Pendukung (Foto Only on Print) -->
+                <Card class="print:shadow-none print:border-none print:break-inside-avoid print:bg-transparent print:col-span-3">
+                    <CardHeader class="print:hidden"><CardTitle>Dokumen Pendukung</CardTitle></CardHeader>
+                    <CardContent class="grid grid-cols-1 md:grid-cols-3 gap-6 print:block print:p-0">
+                        <div class="border rounded-lg p-4 flex flex-col items-center space-y-3 print:border-none print:p-0 print:items-center">
+                            <span class="font-medium text-sm print:hidden">Pas Foto</span>
+                            <div v-if="applicant.photo_path" class="w-32 h-40 bg-gray-100 rounded overflow-hidden print:w-32 print:h-40 print:rounded-none">
+                                <img :src="`/storage/${applicant.photo_path}`" alt="Foto Pelamar" class="w-full h-full object-cover">
+                            </div>
+                            <div v-else class="text-gray-400 text-sm italic">Tidak ada foto</div>
+                            <a v-if="applicant.photo_path" :href="`/storage/${applicant.photo_path}`" target="_blank" class="text-blue-600 text-xs hover:underline print:hidden">Lihat Full</a>
+                        </div>
+                        <div class="border rounded-lg p-4 flex flex-col items-center space-y-3 print:hidden">
+                            <span class="font-medium text-sm">Scan KTP</span>
+                            <a v-if="applicant.ktp_path" :href="`/storage/${applicant.ktp_path}`" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                                <FileText class="w-8 h-8 mr-2" />
+                                <span class="text-sm">Lihat KTP (PDF)</span>
+                            </a>
+                            <div v-else class="text-gray-400 text-sm italic">Tidak ada KTP</div>
+                        </div>
+                        <div class="border rounded-lg p-4 flex flex-col items-center space-y-3 print:hidden">
+                             <span class="font-medium text-sm">Curriculum Vitae</span>
+                            <a v-if="applicant.cv_path" :href="`/storage/${applicant.cv_path}`" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                                <FileText class="w-8 h-8 mr-2" />
+                                <span class="text-sm">Lihat CV (PDF)</span>
+                            </a>
+                            <div v-else class="text-gray-400 text-sm italic">Tidak ada CV</div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <!-- Data Keluarga -->
-                <Card>
-                    <CardHeader><CardTitle>Data Keluarga</CardTitle></CardHeader>
-                    <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card class="print:shadow-none print:border-none print:break-inside-avoid print:p-0 print:col-span-12">
+                    <CardHeader class="print:py-1 print:px-0"><CardTitle class="print:text-sm">Data Keluarga</CardTitle></CardHeader>
+                    <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-4 print:gap-2 print:p-0">
                         <div><Label>Nama Ayah</Label><p>{{ applicant.father_name }}</p></div>
                         <div><Label>Pekerjaan Ayah</Label><p>{{ applicant.father_occupation || '-' }}</p></div>
                         <div><Label>Nama Ibu</Label><p>{{ applicant.mother_name }}</p></div>
@@ -166,7 +198,7 @@ const getChecklistAnswer = (questionId: number) => {
                 </Card>
 
                 <!-- Pengalaman Kerja -->
-                <Card>
+                <Card class="print:shadow-none print:border-none print:break-inside-avoid print:col-span-12">
                      <CardHeader><CardTitle>Pengalaman Kerja</CardTitle></CardHeader>
                      <CardContent>
                         <div v-if="applicant.work_experiences.length === 0" class="text-gray-500">Tidak ada data pengalaman kerja.</div>
@@ -181,7 +213,7 @@ const getChecklistAnswer = (questionId: number) => {
                 </Card>
                  
                 <!-- Data Anak -->
-                <Card>
+                <Card class="print:shadow-none print:border-none print:break-inside-avoid print:col-span-12 print:hidden">
                      <CardHeader><CardTitle>Data Anak</CardTitle></CardHeader>
                      <CardContent>
                         <div v-if="applicant.children.length === 0" class="text-gray-500">Tidak ada data anak.</div>
@@ -197,7 +229,7 @@ const getChecklistAnswer = (questionId: number) => {
                 </Card>
 
                 <!-- Kontak Darurat -->
-                <Card>
+                <Card class="print:shadow-none print:border-none print:break-inside-avoid print:col-span-12">
                      <CardHeader><CardTitle>Kontak Darurat</CardTitle></CardHeader>
                      <CardContent>
                         <div v-if="applicant.emergency_contacts.length === 0" class="text-gray-500">Tidak ada data kontak darurat.</div>
@@ -212,12 +244,12 @@ const getChecklistAnswer = (questionId: number) => {
                 </Card>
 
                 <!-- Checklist / Daftar Pertanyaan -->
-                <Card>
-                     <CardHeader><CardTitle>Daftar Pertanyaan</CardTitle></CardHeader>
-                     <CardContent>
+                <Card class="print:shadow-none print:border-none print:break-before-page print:p-0 print:col-span-12">
+                     <CardHeader class="print:py-1 print:px-0"><CardTitle class="print:text-sm">Daftar Pertanyaan</CardTitle></CardHeader>
+                     <CardContent class="print:p-0">
                         <div v-if="!applicant.checklist || Object.keys(applicant.checklist).length === 0" class="text-gray-500">Tidak ada data checklist.</div>
-                        <div v-else class="space-y-4">
-                            <div v-for="question in questions" :key="question.id" class="border p-4 rounded bg-gray-50 dark:bg-gray-800">
+                        <div v-else class="space-y-4 print:space-y-2 print:grid print:grid-cols-2 print:gap-x-4 print:gap-y-2">
+                            <div v-for="question in questions" :key="question.id" class="border p-4 rounded bg-gray-50 dark:bg-gray-800 print:border p-2 print:bg-transparent print:text-xs">
                                 <p class="mb-2 font-medium text-sm text-gray-900">{{ question.text }}</p>
                                 <div v-if="getChecklistAnswer(question.id)">
                                      <div class="flex items-center space-x-2 text-sm">
@@ -233,7 +265,7 @@ const getChecklistAnswer = (questionId: number) => {
                      </CardContent>
                 </Card>
 
-                <div class="flex justify-end mt-6">
+                <div class="flex justify-end mt-6 print:hidden">
                     <Link href="/admin/applicants">
                         <Button variant="outline">Kembali ke Daftar</Button>
                     </Link>
@@ -242,5 +274,17 @@ const getChecklistAnswer = (questionId: number) => {
         </div>
     </AppLayout>
 </template>
+
+<style>
+@media print {
+    @page {
+        size: auto;
+        margin: 5mm;
+    }
+    body {
+        -webkit-print-color-adjust: exact;
+    }
+}
+</style>
 
 

@@ -60,6 +60,11 @@ const form = useForm({
         acc[q.id] = { answer: '', note: '' };
         return acc;
     }, {} as Record<number, { answer: string, note: string }>),
+
+    // Files
+    ktp: null as File | null,
+    cv: null as File | null,
+    photo: null as File | null,
 });
 
 const age = ref('');
@@ -183,7 +188,7 @@ const submit = () => {
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2 md:col-span-2">
                                 <Label for="position_id">Posisi yang Dilamar</Label>
-                                <select id="position_id" v-model="form.position_id" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white">
+                                <select id="position_id" v-model="form.position_id" :disabled="!!props.position_id" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white">
                                     <option value="" disabled>Pilih Posisi...</option>
                                     <option v-for="pos in positions" :key="pos.id" :value="pos.id">{{ pos.name }}</option>
                                 </select>
@@ -319,6 +324,30 @@ const submit = () => {
                                     <option value="Kontrak/Kos">Kontrak/Kos</option>
                                 </select>
                                  <p v-if="form.errors.residence_ownership_status" class="text-red-500 text-xs">{{ form.errors.residence_ownership_status }}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- 1.b Dokumen Pendukung -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Dokumen Pendukung <span class="text-red-500">*</span></CardTitle>
+                        </CardHeader>
+                        <CardContent class="grid grid-cols-1 gap-4">
+                            <div class="space-y-2">
+                                <Label for="photo">Pas Foto (JPG/JPEG, Max 2MB)</Label>
+                                <Input id="photo" type="file" accept=".jpg,.jpeg" @input="form.photo = $event.target.files[0]" />
+                                <p v-if="form.errors.photo" class="text-red-500 text-xs">{{ form.errors.photo }}</p>
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="ktp">Scan KTP (PDF, Max 2MB)</Label>
+                                <Input id="ktp" type="file" accept=".pdf" @input="form.ktp = $event.target.files[0]" />
+                                <p v-if="form.errors.ktp" class="text-red-500 text-xs">{{ form.errors.ktp }}</p>
+                            </div>
+                             <div class="space-y-2">
+                                <Label for="cv">Curriculum Vitae (PDF, Max 2MB)</Label>
+                                <Input id="cv" type="file" accept=".pdf" @input="form.cv = $event.target.files[0]" />
+                                <p v-if="form.errors.cv" class="text-red-500 text-xs">{{ form.errors.cv }}</p>
                             </div>
                         </CardContent>
                     </Card>
